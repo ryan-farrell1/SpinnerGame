@@ -215,7 +215,7 @@ class MassTester():
         game_lengths = unfin_game_lengths + fin_game_lengths
         longest_game = max(game_lengths)
         shortest_game = min(game_lengths)
-        plot_buffer = int(0.1 * (longest_game - shortest_game))
+        plot_buffer = max(int(0.1 * (longest_game - shortest_game)), 2)
         game_lengths = np.array(game_lengths)
         avg_length = np.mean(game_lengths)
         if len(game_lengths) > 1:
