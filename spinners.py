@@ -233,12 +233,11 @@ class MassTester():
         df = pd.DataFrame(df, columns=["Game Length", "Game Status"])
 
         # Creating plot
-        fig = px.histogram(df, x='Game Length', color='Game Status', color_discrete_map={'Finished': 'red', 'Unfinished': 'blue'})
+        fig = px.histogram(df, x='Game Length', color='Game Status', color_discrete_map={'Finished': 'red', 'Unfinished': 'blue'}, range_x=[shortest_game - plot_buffer, longest_game + plot_buffer])
         fig.update_layout(title='Game Length Histogram',
                           xaxis_title='Game Length',
                           yaxis_title='Frequency',
-                          height=500,
-                          xaxis_range=[shortest_game - plot_buffer, longest_game + plot_buffer],
+                          height=500
                         )
         
         # Return Figure and Game Statistics
