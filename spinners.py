@@ -199,7 +199,7 @@ class MassTester():
                         yaxis_title='Game Score',
                         showlegend=False,
                         xaxis=dict(tick0=0, dtick=x_tick_spacing),
-                        yaxis=dict(tick0=game_scores[0,0], dtick=y_tick_spacing),
+                        yaxis=dict(tick0=game_scores[0][0], dtick=y_tick_spacing),
                         height=500
                         )
 
