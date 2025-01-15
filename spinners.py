@@ -1,5 +1,19 @@
 import numpy as np
+import pandas as pd
+import plotly.graph_objects as go
+import plotly.express as px
 import copy
+
+# Piecewise Linear Function for smoothing experiment data   
+def piecewise_linear(data, t):
+    num_steps = len(data)
+    x = divmod(t, num_steps)[1]
+    int_x, frac_x = divmod(x, 1)
+    int_x = int(int_x)
+    pt0 = data[int_x]
+    pt1 = data[divmod(int_x + 1, num_steps)[1]]
+    func_val = (1 - frac_x)*pt0 + frac_x*pt1
+    return func_val
 
 class SpinnerGame():
     # Game Startup
@@ -135,3 +149,96 @@ class MassTester():
             return finished_histories + unfinished_histories
         else:
             return {"Finished": finished_histories, "Unfinished": unfinished_histories}
+        
+    # Create Plot for Game Scores
+    def score_plot(self, include_target=False, partitions_per_turn=20):
+
+        # Formatting Data
+        game_scores = self.test_histories()
+        game_lengths = [len(x) for x in game_scores]
+        longest_game = max(game_lengths)
+        max_scores = [max(x) for x in game_scores]
+        high_score = max(max_scores)
+        min_scores = [min(x) for x in game_scores]
+        low_score = min(min_scores)
+        if include_target:
+            full_history = [x + [include_target] * (longest_game - len(x)) for x in game_scores]
+        x_tick_spacing = max(int(longest_game / 15),1)
+        y_tick_spacing = max(int((high_score - low_score) / 10),1)
+
+        # Smoothing Data
+        num_partitions = int(longest_game * partitions_per_turn)
+        a = 0
+        b = longest_game - 1
+        t = np.linspace(a, b, num_partitions)
+        target_goal = np.full(num_partitions, include_target)
+        smoothed_history = []
+        for x in full_history:
+            curr_hist = []
+            for i in t:
+                curr_hist.append(piecewise_linear(x, i))
+            smoothed_history.append(curr_hist)
+
+        # Coverting to Pandas df
+        np_hist = pd.DataFrame(smoothed_history).T
+        np_hist['avg_score'] = np_hist.mean(axis=1)
+        t_col = pd.DataFrame(t)
+        t_col.columns = ['frame_num']
+        np_hist = pd.concat([np_hist, t_col], axis=1)
+
+        # Creating Figure
+        fig = go.Figure()
+        for x in np_hist.columns:
+            if x == 'frame_num' or x == 'avg_score':
+                continue
+            fig.add_trace(go.Scatter(x=np_hist['frame_num'], y=np_hist[x], mode='lines', line=dict(color="rgba(150,150,150,0.2)")))
+        fig.add_trace(go.Scatter(x=np_hist['frame_num'], y=np_hist['avg_score'], mode='lines', line=dict(color='rgba(255,0,0,1)')))
+        fig.add_trace(go.Scatter(x=np_hist['frame_num'], y=target_goal, mode='lines', line=dict(color='rgba(255, 155, 0, 1)', dash='dash')))
+        fig.update_layout(title='Spinner Game Simulation',
+                        xaxis_title='Round Number',
+                        yaxis_title='Game Score',
+                        showlegend=False,
+                        xaxis=dict(tick0=0, dtick=x_tick_spacing),
+                        yaxis=dict(tick0=game_scores[0,0], dtick=y_tick_spacing),
+                        height=500
+                        )
+
+        return fig
+    
+    # Create Game Length Plot
+    def game_length_plot(self):
+
+        # Formatting Data
+        game_scores = self.test_histories(seperate_histories=True)
+        unfin_game_lengths = [len(x)-1 for x in game_scores['Unfinished']]
+        fin_game_lengths = [len(x)-1 for x in game_scores['Finished']]
+        game_lengths = unfin_game_lengths + fin_game_lengths
+        game_lengths = np.array(game_lengths)
+        avg_length = np.mean(game_lengths)
+        if len(game_lengths) > 1:
+            var_length = np.var(game_lengths)
+            game_stats = {'Mean': avg_length, "Variance": var_length}
+        else:
+            var_length = 0
+            game_stats = {'Mean': avg_length, "Variance": 0}
+        
+        df = []
+        for x in unfin_game_lengths:
+            df.append([x, "Unfinished"])
+        for x in fin_game_lengths:
+            df.append([x, "Finished"])
+        df = pd.DataFrame(df, columns=["Game Length", "Game Status"])
+
+        # Creating plot
+        fig = px.histogram(df, x='Game Length', color='Game Status')
+        fig.update_layout(title='Game Length Histogram',
+                          xaxis_title='Game Length',
+                          yaxis_title='Frequency',
+                          height=500
+                        )
+        
+        # Return Figure and Game Statistics
+        return fig, game_stats
+        
+
+
