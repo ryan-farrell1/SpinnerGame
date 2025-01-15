@@ -238,7 +238,8 @@ class MassTester():
                           xaxis_title='Game Length',
                           yaxis_title='Frequency',
                           height=500,
-                          xaxis=dict(range=[shortest_game - plot_buffer, longest_game + plot_buffer], autorange=False)
+                          xaxis=dict(range=[shortest_game - plot_buffer, longest_game + plot_buffer], autorange=False),
+                          xbins=dict(start=shortest_game - plot_buffer, end=longest_game + plot_buffer, size=1)
                         )
         
         # Return Figure and Game Statistics
