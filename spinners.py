@@ -215,7 +215,7 @@ class MassTester():
         game_lengths = unfin_game_lengths + fin_game_lengths
         longest_game = max(game_lengths)
         shortest_game = min(game_lengths)
-        plot_buffer = max(int(0.1 * (longest_game - shortest_game)), 2)
+        plot_buffer = max(int(0.2 * (longest_game - shortest_game)), 2)
         game_lengths = np.array(game_lengths)
         avg_length = np.mean(game_lengths)
         if len(game_lengths) > 1:
@@ -233,12 +233,13 @@ class MassTester():
         df = pd.DataFrame(df, columns=["Game Length", "Game Status"])
 
         # Creating plot
-        fig = px.histogram(df, x='Game Length', color='Game Status', color_discrete_map={'Finished': 'blue', 'Unfinished': 'red'}, range_x=[shortest_game - plot_buffer, longest_game + plot_buffer])
+        fig = px.histogram(df, x='Game Length', color='Game Status', color_discrete_map={'Finished': '#95d2ec', 'Unfinished': '#ff4242'}, range_x=[shortest_game - plot_buffer, longest_game + plot_buffer])
         fig.update_layout(title='Game Length Histogram',
                           xaxis_title='Game Length',
                           yaxis_title='Frequency',
                           height=500
                         )
+        fig.update_traces(xbins_size=1)
         
         # Return Figure and Game Statistics
         return fig, game_stats
