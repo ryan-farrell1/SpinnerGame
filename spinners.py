@@ -237,7 +237,8 @@ class MassTester():
         fig.update_layout(title='Game Length Histogram',
                           xaxis_title='Game Length',
                           yaxis_title='Frequency',
-                          height=500
+                          height=500,
+                          xaxis=dict(range=[shortest_game - plot_buffer, longest_game + plot_buffer], autorange=False)
                         )
         
         # Return Figure and Game Statistics
