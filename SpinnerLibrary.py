@@ -98,7 +98,7 @@ class MassTester():
         self.unfinished_games = []
         self.finished_games = []
 
-    def register(self, board, target, board_range=None, board_len=None, board_len_range=None, target_range=None):
+    def register(self, board=[-1,0,1], target=10, board_range=[-10,10], board_len=3, board_len_range=[2,5], target_range=[0,100]):
         # Creating Games
         for i in range(self.num_trials):
             # Creating Board
