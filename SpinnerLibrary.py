@@ -99,6 +99,28 @@ class MassTester():
         self.finished_games = []
 
     def register(self, board=[-1,0,1], target=10, board_range=[-10,10], board_len=3, board_len_range=[2,5], target_range=[0,100]):
+        
+        # Save important settings
+        def rand_range_str(low, high):
+            return f"Rand({low}, {high})"
+
+        if self.board_length_rand:
+            len_str = rand_range_str(board_len_range[0], board_len_range[1])
+        else:
+            len_str = str(board_len)
+
+        if self.board_val_rand:
+            val_str = rand_range_str(board_range[0], board_range[1])
+        else:
+            val_str = str(board)
+
+        if self.target_rand:
+            tar_str = rand_range_str(target_range[0], target_range[1])
+        else:
+            tar_str = str(target)
+        
+        self.game_stats = {"Board Length": len_str, "Board Value": val_str, "Target": tar_str}
+
         # Creating Games
         for i in range(self.num_trials):
             # Creating Board
@@ -176,8 +198,16 @@ class MassTester():
     # Create Plot for Game Scores
     def score_plot(self, target=0, include_target=False, centralized=False, partitions_per_turn=20):
 
+        if target:
+            include_target = True
+        if centralized:
+            include_target = False
+
         # Formatting Data
         game_scores = self.test_histories(centralized=centralized)
+        starts = [game[0] for game in game_scores]
+        avg_start = np.mean(starts).item()
+        avg_start = round(avg_start)
         game_lengths = [len(x) for x in game_scores]
         longest_game = max(game_lengths)
         max_scores = [max(x) for x in game_scores]
@@ -193,7 +223,8 @@ class MassTester():
         a = 0
         b = longest_game - 1
         t = np.linspace(a, b, num_partitions)
-        target_goal = np.full(num_partitions, include_target)
+        if include_target:
+            target_goal = np.full(num_partitions, target)
         smoothed_history = []
         for x in full_history:
             curr_hist = []
@@ -217,12 +248,16 @@ class MassTester():
         fig.add_trace(go.Scatter(x=np_hist['frame_num'], y=np_hist['avg_score'], mode='lines', line=dict(color='rgba(255,0,0,1)')))
         if include_target:
             fig.add_trace(go.Scatter(x=np_hist['frame_num'], y=target_goal, mode='lines', line=dict(color='rgba(255, 155, 0, 1)', dash='dash')))
+        if centralized:
+            y_title = "Displacement from Target"
+        else:
+            y_title = "Game Score"
         fig.update_layout(title='Spinner Game Simulation',
                         xaxis_title='Round Number',
-                        yaxis_title='Game Score',
+                        yaxis_title=y_title,
                         showlegend=False,
                         xaxis=dict(tick0=0, dtick=x_tick_spacing),
-                        yaxis=dict(tick0=game_scores[0][0], dtick=y_tick_spacing),
+                        yaxis=dict(tick0=avg_start, dtick=y_tick_spacing),
                         height=500
                         )
 
@@ -240,14 +275,19 @@ class MassTester():
         shortest_game = min(game_lengths)
         plot_buffer = max(int(0.2 * (longest_game - shortest_game)), 2)
         game_lengths = np.array(game_lengths)
-        avg_length = np.mean(game_lengths)
+        avg_length = np.mean(game_lengths).item()
+        avg_length = round(avg_length, 2)
+
+        # Creating Game Stats
         if len(game_lengths) > 1:
-            var_length = np.var(game_lengths)
-            game_stats = {'Mean': avg_length, "Variance": var_length}
+            var_length = np.var(game_lengths).item()
+            var_length = round(var_length, 2)
         else:
             var_length = 0
-            game_stats = {'Mean': avg_length, "Variance": 0}
+
+        self.game_stats.update({'Mean': str(avg_length), "Variance": str(var_length)})
         
+        # Constructing DataFrame
         df = []
         for x in fin_game_lengths:
             df.append([x, "Finished"])
@@ -265,7 +305,7 @@ class MassTester():
         fig.update_traces(xbins_size=1)
         
         # Return Figure and Game Statistics
-        return fig, game_stats
+        return fig, self.game_stats
         
 
 
