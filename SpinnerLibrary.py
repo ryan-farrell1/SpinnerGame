@@ -102,22 +102,22 @@ class MassTester():
         
         # Save important settings
         def rand_range_str(low, high):
-            return f"Rand({low}, {high})"
+            return f"~ Rand({low}, {high})"
 
         if self.board_length_rand:
             len_str = rand_range_str(board_len_range[0], board_len_range[1])
         else:
-            len_str = str(board_len)
+            len_str = "= " + str(board_len)
 
         if self.board_val_rand:
             val_str = rand_range_str(board_range[0], board_range[1])
         else:
-            val_str = str(board)
+            val_str = "= " + str(board)
 
         if self.target_rand:
             tar_str = rand_range_str(target_range[0], target_range[1])
         else:
-            tar_str = str(target)
+            tar_str = "= " + str(target)
         
         self.game_stats = {"Board Length": len_str, "Board Value": val_str, "Target": tar_str}
 
